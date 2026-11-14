@@ -68,6 +68,19 @@ Observed in LangSmith on November 12, 2026 (Pacific time).
 
 In **Local → Tracing**, open each top-level `LangGraph` run and expand the child runs. Select `word_count` to inspect the tool input and output. Select `ChatOllama` to inspect model timing. These timings represent one captured trace per path. A benchmark would require repeated runs under comparable conditions.
 
+## 🟪 CI diagnosis with and without evidence
+
+Both runs asked: `Why did build MAPLE-207 fail?`
+
+| Condition | Lookup output | Verified agent behavior |
+|---|---|---|
+| Evidence available | `ERROR [signing] Signing certificate expired.` | Identified the expired certificate and quoted the exact log line. |
+| Evidence withheld | `No CI log available for MAPLE-207.` | Reported insufficient evidence and left the cause undetermined. |
+
+Both requests completed successfully. Each condition was tested once with
+synthetic evidence. Inspect the `lookup_ci_log` child run and the final AI
+message in LangSmith to verify the behavior.
+
 ## 📚 References
 
 - [freeCodeCamp tutorial by Darsh Shah](https://www.freecodecamp.org/news/how-to-trace-and-monitor-ai-agents-with-langsmith/)
