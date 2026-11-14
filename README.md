@@ -10,7 +10,7 @@ The baseline follows Darsh Shah’s [How to Trace and Monitor AI Agents with Lan
 
 | Extension | What we added or measured | Verified result |
 |---|---|---|
-| 🏷️ **1. Trace names, tags, and metadata** | Named the run `local-ollama-agent`, added `project-6` and `ollama` tags, and attached model and app version metadata. The CI pilot also labels the evidence condition. | LangSmith showed the run name and both tags on model runs. |
+| 🏷️ **1. Trace names, tags, and metadata** | The tutorial suggests tags and metadata as a next step. This project implemented `local-ollama-agent` run names, `project-6` and `ollama` tags, model and app version metadata, and a CI evidence condition label. | LangSmith showed the run name and both tags on model runs. |
 | ⏱️ **2. Latency comparison** | Compared total request latency and time to first token on the first model call across three tagged traces per prompt. | Median total latency was **5.35 s** for Paris and **11.00 s** for Cedar. Median time to first token was **4.66 s** and **8.53 s**, respectively. |
 | 🧪 **3. Controlled tool failure and recovery** | Added `fail_demo`, which raises `DemoToolError`. The CLI catches it and continues accepting prompts. | LangSmith showed the error on the tool and top-level trace. The next Paris prompt succeeded in the same CLI session. |
 | 🔎 **4. CI diagnosis with and without evidence** | Added `lookup_ci_log` and ran the same MAPLE-207 question with the synthetic log available and withheld. | The agent quoted the signing error when available and reported insufficient evidence when withheld. Both traces completed successfully. |
