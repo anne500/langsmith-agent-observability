@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 
 from langchain.agents import create_agent
@@ -26,15 +27,29 @@ def fail_demo() -> str:
     """Run the controlled failure test when explicitly requested."""
     raise DemoToolError("Simulated CI evidence lookup failure")
 
+
+@tool
+def lookup_ci_log(build_id: str) -> str:
+    """Look up synthetic CI evidence for a build ID."""
+    build_id = build_id.strip().upper()
+    if build_id == "MAPLE-207" and os.getenv("BRI_HIDE_CI_LOG") != "1":
+        return "ERROR [signing] Signing certificate expired."
+    return f"No CI log available for {build_id}."
+
 def main() -> None:
     model_name = "qwen3.5:4b"
     agent = create_agent(
         model=ChatOllama(model=model_name, temperature=0, reasoning=False),
-        tools=[current_time, word_count, fail_demo],
+        tools=[current_time, word_count, fail_demo, lookup_ci_log],
         system_prompt=(
             "Use current_time for requests about the current local date or time. "
             "Use word_count when asked to count words. "
-            "Answer directly when neither tool is needed."
+            "Use fail_demo only when the controlled failure test is requested. "
+            "For CI build diagnosis, call lookup_ci_log with the build ID. "
+            "Base the diagnosis only on the returned evidence and quote the exact "
+            "log line that supports it. If no log is available, say that there is "
+            "insufficient evidence to determine the cause. "
+            "For other questions, answer directly."
         ),
     )
 
@@ -54,7 +69,11 @@ def main() -> None:
                     "tags": ["project-6", "ollama"],
                     "metadata": {
                         "model": model_name,
-                        "app_version": "failure-demo-v1",
+                        "app_version": "bri-evidence-v1", #"failure-demo-v1",
+			"ci_evidence": (
+                            "missing" if os.getenv("BRI_HIDE_CI_LOG") == "1"
+                            else "available"
+                        ),
                     },
                 },
             )
