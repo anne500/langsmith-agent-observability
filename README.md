@@ -2,22 +2,34 @@
 
 A Windows PowerShell walkthrough for tracing a local LangChain agent running `qwen3.5:4b` through Ollama. LangSmith records the execution path and timing when cloud tracing is enabled.
 
+<a id="base-tutorial"></a>
+
 ## 🟦 Base tutorial
 
 The baseline follows Darsh Shah’s [How to Trace and Monitor AI Agents with LangSmith](https://www.freecodecamp.org/news/how-to-trace-and-monitor-ai-agents-with-langsmith/). It runs a local Ollama agent with `current_time` and `word_count`, then uses LangSmith to inspect the model and tool calls. The verified baseline traces below cover a direct answer (Paris) and a tool call (Cedar, 6 words).
 
 ## 🧩 Extensions added in Project 6
 
-| Extension | What we added or measured | Verified result |
-|---|---|---|
-| 🏷️ **1. Trace names, tags, and metadata** | The tutorial suggests tags and metadata as a next step. This project implemented `local-ollama-agent` run names, `project-6` and `ollama` tags, model and app version metadata, and a CI evidence condition label. | LangSmith showed the run name and both tags on model runs. |
-| ⏱️ **2. Latency comparison** | Compared total request latency and time to first token on the first model call across three tagged traces per prompt. | Median total latency was **5.35 s** for Paris and **11.00 s** for Cedar. Median time to first token was **4.66 s** and **8.53 s**, respectively. |
-| 🧪 **3. Controlled tool failure and recovery** | Added `fail_demo`, which raises `DemoToolError`. The CLI catches it and continues accepting prompts. | LangSmith showed the error on the tool and top-level trace. The next Paris prompt succeeded in the same CLI session. |
-| 🔎 **4. CI diagnosis with and without evidence** | Added `lookup_ci_log` and ran the same MAPLE-207 question with the synthetic log available and withheld. | The agent quoted the signing error when available and reported insufficient evidence when withheld. Both traces completed successfully. |
+| Origin | Item | Scope or contribution | Verification |
+| --- |---|---|---|
+| 🟦 Tutorial baseline | [Base tutorial](#base-tutorial) | Local Ollama agent with time and word-count tools, with model and tool calls traced in LangSmith. | See the [tutorial baseline](#base-tutorial). |
+| 🧩 Extension | 🏷️ **1. Trace names, tags, and metadata** | The tutorial suggests tags and metadata as a next step. This project implemented `local-ollama-agent` run names, `project-6` and `ollama` tags, model and app version metadata, and a CI evidence condition label. | LangSmith showed the run name and both tags on model runs. |
+| 🧩 Extension | ⏱️ **2. Latency comparison** | Compared total request latency and time to first token on the first model call across three tagged traces per prompt. | Median total latency was **5.35 s** for Paris and **11.00 s** for Cedar. Median time to first token was **4.66 s** and **8.53 s**, respectively. |
+| 🧩 Extension | 🧪 **3. Controlled tool failure and recovery** | Added `fail_demo`, which raises `DemoToolError`. The CLI catches it and continues accepting prompts. | LangSmith showed the error on the tool and top-level trace. The next Paris prompt succeeded in the same CLI session. |
+| 🧩 Extension | 🔎 **4. CI diagnosis with and without evidence** | Added `lookup_ci_log` and ran the same MAPLE-207 question with the synthetic log available and withheld. | The agent quoted the signing error when available and reported insufficient evidence when withheld. Both traces completed successfully. |
 
 The latency comparison includes setup runs and describes these six traces. The CI comparison uses one synthetic build and one run per condition.
 
-## 🟦 Execution paths
+<a id="explore-the-project"></a>
+
+## 🧭 Explore the project
+
+[🧩 Architecture](#architecture) · [🚀 Setup](#setup) · [🧪 Results & verification](#verified-runs) · [🗂️ Evidence & guides](#bri-evidence) · [📚 Tutorial credit](#tutorial-credit) · [🎨 Visual standard](https://github.com/anne500/multi-agent-study-guide/blob/main/VISUAL_STYLE.md#readme-presentation-standard)
+
+<a id="-execution-paths"></a>
+<a id="architecture"></a>
+
+## 🧩 Architecture and execution paths
 
 ```mermaid
 flowchart LR
@@ -34,7 +46,9 @@ flowchart LR
     class A result
 ```
 
-## 🟩 Run locally
+<a id="setup"></a>
+
+## 🚀 Run locally
 
 Use the project folder containing `trace_agent.py`. Start Ollama before running the agent.
 
@@ -69,7 +83,9 @@ python .\trace_agent.py
 
 Paste the key at the masked prompt. Use sample inputs because cloud tracing sends request and response data to LangSmith. Ollama still runs inference locally. The tutorial was run on the Developer plan with Base retention. See [LangSmith pricing](https://www.langchain.com/pricing) and [LangSmith billing](https://docs.langchain.com/langsmith/billing).
 
-## ✅ Verified runs
+<a id="verified-runs"></a>
+
+## 🧪 Verified runs
 
 Observed in LangSmith on November 12, 2026 (Pacific time).
 
@@ -82,6 +98,8 @@ Observed in LangSmith on November 12, 2026 (Pacific time).
 - **Cedar:** The two model calls took 19.00 s and 2.52 s. The tool duration displayed as 0.00 s at the UI's precision.
 
 In **Local → Tracing**, open each top-level `LangGraph` run and expand the child runs. Select `word_count` to inspect the tool input and output. Select `ChatOllama` to inspect model timing. These timings represent one captured trace per path. A benchmark would require repeated runs under comparable conditions.
+
+<a id="bri-evidence"></a>
 
 ## 🟪 CI diagnosis with and without evidence
 
@@ -97,6 +115,8 @@ synthetic evidence. Inspect the `lookup_ci_log` child run and the final AI
 message in LangSmith to verify the behavior.
 
 To reproduce the pilot in PowerShell, set `$env:BRI_HIDE_CI_LOG = "0"` for the available condition or `"1"` for the withheld condition before starting `python .\trace_agent.py`. Ask the same question in each run. Afterward, use `Remove-Item Env:BRI_HIDE_CI_LOG` to restore the default.
+
+<a id="tutorial-credit"></a>
 
 ## 📚 References
 
